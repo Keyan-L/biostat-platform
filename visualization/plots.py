@@ -104,8 +104,9 @@ def roc_curve_interactive(y_true, y_score):
 
 
 def confusion_matrix_figure(y_true, y_pred):
-    fig, ax = plt.subplots(figsize=(5, 5))
     cm = confusion_matrix(y_true, y_pred)
+    size = max(5, min(8, 1.1 * cm.shape[0] + 2.6))
+    fig, ax = plt.subplots(figsize=(size, size))
     ConfusionMatrixDisplay(cm).plot(ax=ax, cmap="Blues", colorbar=False)
     ax.set_title("Confusion Matrix")
     fig.tight_layout()

@@ -72,6 +72,9 @@ def generate_pdf_report(dataset_name: str, df: pd.DataFrame | None, results: dic
         for name, figure in plots.items():
             if hasattr(figure, "savefig"):
                 fig = figure
-                fig.suptitle(name)
+                try:
+                    fig.tight_layout()
+                except Exception:
+                    pass
                 pdf.savefig(fig, bbox_inches="tight")
     return output.getvalue()
