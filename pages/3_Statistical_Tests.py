@@ -8,7 +8,7 @@ from analysis.statistical_tests import (
     mann_whitney_u_test,
     one_way_anova,
 )
-from utils.data_summary import continuous_columns, grouping_columns
+from utils.data_summary import binary_columns, continuous_columns, grouping_columns
 from utils.state import get_dataset, save_result
 from utils.ui import data_table, footer, init_page, kpi_cards, page_header, section
 
@@ -26,6 +26,7 @@ if df is None:
 
 continuous = continuous_columns(df)
 grouping = grouping_columns(df)
+binary = binary_columns(df)
 kpi_cards(
     [
         ("Rows", f"{df.shape[0]:,}", "Available observations"),
@@ -53,12 +54,17 @@ try:
             st.warning("This test requires at least one continuous variable.")
             footer()
             st.stop()
-        if not grouping:
-            st.warning("This test requires at least one grouping variable.")
+        group_options = binary if test in ["Independent t-test", "Mann-Whitney U test"] else grouping
+        if not group_options:
+            st.warning(
+                "This test requires at least one two-level grouping variable."
+                if test in ["Independent t-test", "Mann-Whitney U test"]
+                else "This test requires at least one grouping variable."
+            )
             footer()
             st.stop()
         outcome = st.selectbox("Continuous outcome", continuous)
-        group = st.selectbox("Grouping variable", grouping)
+        group = st.selectbox("Grouping variable", group_options)
         if st.button("Run test", type="primary"):
             with st.spinner(f"Running {test}..."):
                 if test == "Independent t-test":
@@ -73,12 +79,17 @@ try:
             data_table(result_df, height=180)
             save_result(test, result_df)
     else:
-        if len(grouping) < 2:
-            st.warning("At least two grouping variables are required.")
+        table_options = binary if test == "Fisher exact test" else grouping
+        if len(table_options) < 2:
+            st.warning(
+                "Fisher exact test requires at least two two-level grouping variables."
+                if test == "Fisher exact test"
+                else "At least two grouping variables are required."
+            )
             footer()
             st.stop()
-        row_col = st.selectbox("Rows", grouping)
-        col_col = st.selectbox("Columns", [col for col in grouping if col != row_col])
+        row_col = st.selectbox("Rows", table_options)
+        col_col = st.selectbox("Columns", [col for col in table_options if col != row_col])
         if st.button("Run test", type="primary"):
             with st.spinner(f"Running {test}..."):
                 if test == "Chi-square test":
