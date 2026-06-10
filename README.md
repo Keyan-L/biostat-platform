@@ -8,7 +8,7 @@ A professional Streamlit application for biomedical and clinical dataset analysi
 - Professional SaaS-style dashboard UI with icon sidebar navigation, KPI cards, responsive spacing, and a consistent visual theme
 - Data and model robustness checks for empty files, duplicate columns, stale session outputs, small samples, all-missing predictors, constant predictors, high-cardinality ID-like predictors, and invalid statistical-test configurations
 - CSV and Excel upload
-- Included sample biostatistics dataset
+- Included realistic sample dataset with mixed variable types, missingness, outliers, skewed cost data, imbalanced outcomes, dates, IDs, and site/treatment heterogeneity
 - Dataset dimensions, variable typing, and missing-value summaries
 - Summary statistics, histograms, boxplots, correlation matrices, pairwise scatter plots, and missing data maps
 - Independent t-test, Mann-Whitney U test, Chi-square test, Fisher exact test, and one-way ANOVA
