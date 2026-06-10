@@ -6,6 +6,7 @@ A professional Streamlit application for biomedical and clinical dataset analysi
 
 - Multi-page Streamlit workflow
 - Professional SaaS-style dashboard UI with icon sidebar navigation, KPI cards, responsive spacing, and a consistent visual theme
+- Data and model robustness checks for empty files, duplicate columns, stale session outputs, small samples, all-missing predictors, constant predictors, high-cardinality ID-like predictors, and invalid statistical-test configurations
 - CSV and Excel upload
 - Included sample biostatistics dataset
 - Dataset dimensions, variable typing, and missing-value summaries

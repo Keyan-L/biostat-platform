@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
+from statsmodels.tools.sm_exceptions import PerfectSeparationError
 from sklearn.metrics import confusion_matrix, roc_auc_score
 
 
@@ -15,6 +16,7 @@ def linear_regression(df: pd.DataFrame, outcome: str, predictors: list[str]):
     data = df[[outcome] + predictors].dropna()
     y = data[outcome].astype(float)
     x = _design_matrix(data, predictors)
+    _validate_regression_inputs(data, y, x, "Linear regression")
     model = sm.OLS(y, x).fit()
     summary = model_summary_table(model, odds_ratios=False)
     diagnostics = {
@@ -35,7 +37,15 @@ def logistic_regression(df: pd.DataFrame, outcome: str, predictors: list[str]):
         raise ValueError("Logistic regression outcome must have exactly two classes.")
     y = pd.Series(pd.Categorical(y).codes, index=data.index, name=outcome)
     x = _design_matrix(data, predictors)
-    model = sm.Logit(y.astype(float), x).fit(disp=False)
+    _validate_regression_inputs(data, y, x, "Logistic regression")
+    if y.value_counts().min() < 2:
+        raise ValueError(f"Logistic regression requires at least 2 observations in each outcome class. Current counts: {y.value_counts().to_dict()}.")
+    try:
+        model = sm.Logit(y.astype(float), x).fit(disp=False)
+    except PerfectSeparationError as exc:
+        raise ValueError("Logistic regression failed because predictors perfectly separate the outcome. Remove overly predictive or sparse predictors.") from exc
+    except np.linalg.LinAlgError as exc:
+        raise ValueError("Logistic regression failed due to a singular design matrix. Remove collinear or sparse predictors.") from exc
     summary = model_summary_table(model, odds_ratios=True)
     predicted = model.predict(x)
     classes = (predicted >= 0.5).astype(int)
@@ -48,6 +58,25 @@ def logistic_regression(df: pd.DataFrame, outcome: str, predictors: list[str]):
         "confusion_matrix": confusion_matrix(y, classes).tolist(),
     }
     return model, summary, diagnostics, predicted, y
+
+
+def _validate_regression_inputs(data: pd.DataFrame, y: pd.Series, x: pd.DataFrame, model_name: str) -> None:
+    if data.empty:
+        raise ValueError(f"{model_name} has no complete rows after removing missing values.")
+    if len(data) < 5:
+        raise ValueError(f"{model_name} requires at least 5 complete observations.")
+    if y.nunique(dropna=True) < 2:
+        raise ValueError(f"{model_name} outcome must have at least two distinct values.")
+    if x.shape[1] >= len(data):
+        raise ValueError(
+            f"{model_name} has too many parameters ({x.shape[1]}) for {len(data)} complete observations. "
+            "Use fewer predictors or combine sparse categories."
+        )
+    rank = np.linalg.matrix_rank(x.to_numpy(dtype=float))
+    if rank < x.shape[1]:
+        raise ValueError(f"{model_name} design matrix is rank deficient. Remove collinear predictors or sparse categories.")
+    if np.isinf(x.to_numpy(dtype=float)).any() or np.isinf(pd.to_numeric(y, errors="coerce").to_numpy()).any():
+        raise ValueError(f"{model_name} inputs contain infinite values. Replace or remove them before fitting.")
 
 
 def model_summary_table(model, odds_ratios: bool) -> pd.DataFrame:

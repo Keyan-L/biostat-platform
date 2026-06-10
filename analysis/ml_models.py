@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import (
@@ -67,6 +69,7 @@ def train_model(df: pd.DataFrame, target: str, predictors: list[str], model_name
     data = df[[target] + predictors].dropna(subset=[target])
     x = data[predictors]
     y = data[target]
+    validate_model_inputs(x, y, predictors, task)
     if task == "classification":
         y = pd.Series(pd.Categorical(y).codes, index=data.index, name=target)
         if y.nunique() < 2:
@@ -132,6 +135,52 @@ def build_preprocessor(x: pd.DataFrame) -> ColumnTransformer:
             ("categorical", Pipeline([("impute", SimpleImputer(strategy="most_frequent")), ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False))]), categorical_features),
         ]
     )
+
+
+def validate_model_inputs(x: pd.DataFrame, y: pd.Series, predictors: list[str], task: str) -> None:
+    if not predictors:
+        raise ValueError("Select at least one predictor before training a model.")
+    if len(y) < 10:
+        raise ValueError("At least 10 rows with a non-missing target are recommended for model training.")
+    if y.isna().all():
+        raise ValueError("The selected target contains only missing values.")
+    if x.empty:
+        raise ValueError("No predictor columns are available for model training.")
+    all_missing = [column for column in x.columns if x[column].isna().all()]
+    if all_missing:
+        raise ValueError(f"Remove predictor columns that are entirely missing: {', '.join(all_missing)}.")
+    constant = [column for column in x.columns if x[column].nunique(dropna=True) <= 1]
+    if constant:
+        raise ValueError(f"Remove predictor columns with no variation: {', '.join(constant)}.")
+    high_cardinality = [
+        column
+        for column in x.select_dtypes(exclude=np.number).columns
+        if x[column].nunique(dropna=True) > 50 and x[column].nunique(dropna=True) / max(len(x), 1) > 0.5
+    ]
+    if high_cardinality:
+        raise ValueError(f"High-cardinality categorical predictors look like IDs or free text: {', '.join(high_cardinality)}.")
+    numeric = x.select_dtypes(include=np.number)
+    if not numeric.empty and np.isinf(numeric.to_numpy()).any():
+        raise ValueError("Numeric predictors contain infinite values. Replace or remove them before training.")
+    if task == "classification":
+        class_counts = y.value_counts(dropna=True)
+        if len(class_counts) < 2:
+            raise ValueError("Classification requires at least two target classes.")
+        if class_counts.min() < 2:
+            raise ValueError(f"Each class needs at least 2 observations for stratified training. Current counts: {class_counts.to_dict()}.")
+        test_rows = math.ceil(len(y) * 0.25)
+        if len(class_counts) > test_rows:
+            raise ValueError(
+                f"The target has {len(class_counts)} classes, but the 25% holdout would contain only {test_rows} rows. "
+                "Use more data or reduce the number of classes."
+            )
+    else:
+        if not pd.api.types.is_numeric_dtype(y):
+            raise ValueError("Regression requires a numeric target.")
+        if y.nunique(dropna=True) < 2:
+            raise ValueError("Regression target must have at least two distinct values.")
+        if np.isinf(pd.to_numeric(y, errors="coerce").to_numpy()).any():
+            raise ValueError("Regression target contains infinite values. Replace or remove them before training.")
 
 
 def build_estimator(model_name: str, task: str):

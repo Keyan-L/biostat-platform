@@ -8,10 +8,25 @@ import pandas as pd
 def load_tabular_file(uploaded_file) -> pd.DataFrame:
     name = uploaded_file.name.lower()
     if name.endswith(".csv"):
-        return pd.read_csv(uploaded_file)
-    if name.endswith((".xlsx", ".xls")):
-        return pd.read_excel(uploaded_file)
-    raise ValueError("Unsupported file type. Upload a CSV, XLSX, or XLS file.")
+        df = pd.read_csv(uploaded_file)
+    elif name.endswith((".xlsx", ".xls")):
+        df = pd.read_excel(uploaded_file)
+    else:
+        raise ValueError("Unsupported file type. Upload a CSV, XLSX, or XLS file.")
+    validate_uploaded_dataframe(df)
+    return df
+
+
+def validate_uploaded_dataframe(df: pd.DataFrame) -> None:
+    if df.empty:
+        raise ValueError("The uploaded file does not contain any rows or columns.")
+    if df.columns.duplicated().any():
+        duplicates = df.columns[df.columns.duplicated()].tolist()
+        raise ValueError(f"Duplicate column names found: {', '.join(map(str, duplicates))}")
+    if df.dropna(how="all").empty:
+        raise ValueError("The uploaded dataset only contains empty rows.")
+    if df.dropna(axis=1, how="all").empty:
+        raise ValueError("The uploaded dataset only contains empty columns.")
 
 
 def dataframe_to_csv_bytes(df: pd.DataFrame) -> bytes:

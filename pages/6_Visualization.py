@@ -28,6 +28,7 @@ if df is None:
 holdout = st.session_state.get("last_ml_holdout")
 task = st.session_state.get("last_ml_task")
 model = st.session_state.get("last_ml_model")
+model_name = st.session_state.get("last_ml_model_name", "Last trained classification model")
 
 if holdout is None or task != "classification" or model is None:
     st.warning("Train a classification model first to enable ROC, confusion matrix, and calibration plots.")
@@ -44,9 +45,9 @@ else:
 
 kpi_cards(
     [
+        ("Model", model_name, "Source: Machine Learning page"),
         ("Holdout Rows", f"{len(y_test):,}", "Evaluation sample"),
         ("Classes", f"{y_test.nunique():,}", "Observed target classes"),
-        ("Predictions", f"{len(predictions):,}", "Generated labels"),
         ("Probability Output", "Yes" if hasattr(model, "predict_proba") else "No", "Needed for ROC/calibration"),
     ]
 )

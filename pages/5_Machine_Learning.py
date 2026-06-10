@@ -53,6 +53,7 @@ if st.button("Train model", type="primary", disabled=not predictors):
         st.session_state["last_ml_model"] = pipeline
         st.session_state["last_ml_holdout"] = holdout
         st.session_state["last_ml_task"] = task
+        st.session_state["last_ml_model_name"] = model_name
 
         st.success(f"{model_name} training completed.")
         section("Cross-validation and Holdout Metrics")
