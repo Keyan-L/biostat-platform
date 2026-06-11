@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import plotly.express as px
@@ -13,7 +15,7 @@ def histogram(df: pd.DataFrame, column: str):
     return px.histogram(df, x=column, marginal="box", template="plotly_white")
 
 
-def boxplot(df: pd.DataFrame, numeric_col: str, group_col: str | None = None):
+def boxplot(df: pd.DataFrame, numeric_col: str, group_col: Optional[str] = None):
     return px.box(df, x=group_col, y=numeric_col, points="outliers", template="plotly_white")
 
 
@@ -42,7 +44,7 @@ def correlation_heatmap_interactive(df: pd.DataFrame):
     return fig
 
 
-def pairwise_scatter(df: pd.DataFrame, columns: list[str], hue: str | None = None):
+def pairwise_scatter(df: pd.DataFrame, columns: list[str], hue: Optional[str] = None):
     return px.scatter_matrix(df, dimensions=columns, color=hue, template="plotly_white")
 
 

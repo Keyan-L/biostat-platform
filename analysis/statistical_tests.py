@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Union
+
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -81,7 +83,7 @@ def _two_groups(df: pd.DataFrame, numeric_col: str, group_col: str) -> list[pd.S
     return [clean.loc[clean[group_col] == level, numeric_col] for level in levels]
 
 
-def _require_min_group_size(groups: list[pd.Series | np.ndarray], minimum: int, test_name: str) -> None:
+def _require_min_group_size(groups: list[Union[pd.Series, np.ndarray]], minimum: int, test_name: str) -> None:
     sizes = [len(group) for group in groups]
     if any(size < minimum for size in sizes):
         raise ValueError(f"{test_name} requires at least {minimum} non-missing observations in each group. Current group sizes: {sizes}.")

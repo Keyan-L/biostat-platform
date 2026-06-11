@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from io import BytesIO
+from typing import Optional
 
 import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
@@ -31,7 +32,7 @@ def figure_to_png_bytes(figure) -> bytes:
     return output.getvalue()
 
 
-def generate_pdf_report(dataset_name: str, df: pd.DataFrame | None, results: dict, plots: dict) -> bytes:
+def generate_pdf_report(dataset_name: str, df: Optional[pd.DataFrame], results: dict, plots: dict) -> bytes:
     output = BytesIO()
     with PdfPages(output) as pdf:
         fig = plt.figure(figsize=(8.27, 11.69))

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional, Union
+
 import pandas as pd
 import streamlit as st
 
@@ -228,7 +230,7 @@ def render_sidebar() -> None:
         st.caption(f"{len(get_results())} saved result set(s)")
 
 
-def page_header(title: str, subtitle: str, status: str | None = None) -> None:
+def page_header(title: str, subtitle: str, status: Optional[str] = None) -> None:
     status = status or dataset_status()
     st.markdown(
         f"""
@@ -252,7 +254,7 @@ def dataset_status() -> str:
     return f"{get_dataset_name()} · {df.shape[0]:,} rows"
 
 
-def kpi_cards(items: list[tuple[str, str | int | float, str]]) -> None:
+def kpi_cards(items: list[tuple[str, Union[str, int, float], str]]) -> None:
     cols = st.columns(len(items))
     for col, (label, value, help_text) in zip(cols, items):
         with col:

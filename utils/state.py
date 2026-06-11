@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional, Union
+
 import pandas as pd
 import streamlit as st
 
@@ -41,7 +43,7 @@ def dataset_signature(df: pd.DataFrame) -> int:
     return int(pd.util.hash_pandas_object(df, index=True).sum())
 
 
-def get_dataset() -> pd.DataFrame | None:
+def get_dataset() -> Optional[pd.DataFrame]:
     return st.session_state.get(DATASET_KEY)
 
 
@@ -49,7 +51,7 @@ def get_dataset_name() -> str:
     return st.session_state.get(DATASET_NAME_KEY, "dataset")
 
 
-def save_result(name: str, result: pd.DataFrame | dict | str) -> None:
+def save_result(name: str, result: Union[pd.DataFrame, dict, str]) -> None:
     st.session_state.setdefault(RESULTS_KEY, {})
     st.session_state[RESULTS_KEY][name] = result
 
